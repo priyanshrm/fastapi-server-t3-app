@@ -1,4 +1,5 @@
 import random
+import asyncio
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.responses import JSONResponse
@@ -19,10 +20,14 @@ def root():
 
 @app.post("/process_data")
 async def process_data(data: dict):
-    ideal_move = foo(data)
-    response = JSONResponse(content=ideal_move)
+    # ideal_move = foo(data)
+    ideal_move = await asyncio.to_thread(foo, data)
+    response = JSONResponse(content={"ideal_move": ideal_move})
     response.headers["Access-Control-Allow-Origin"] = "*"
-    return {"ideal_move":ideal_move}
+    return response
+    # response = JSONResponse(content=ideal_move)
+    # response.headers["Access-Control-Allow-Origin"] = "*"
+    # return {"ideal_move":ideal_move}
 
 def isWinner(board, player):
     combinations = [[0, 1, 2], [3, 4, 5], [6, 7, 8], [
