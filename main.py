@@ -6,7 +6,7 @@ from starlette.responses import JSONResponse
 import ssl
 
 context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
-context.load_cert_chain("cert.pem", "key.pem")
+context.load_cert_chain('server.crt', 'server.key')
 
 app = FastAPI()
 
