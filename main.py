@@ -2,12 +2,10 @@ import random
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.responses import JSONResponse
-from fastapi import FastAPI, HTTPException
-from fastapi.responses import JSONResponse
-from typing import Awaitable
-
+from mangum import Mangum
 
 app = FastAPI()
+handler = Mangum(app)
 
 app.add_middleware(
     CORSMiddleware,
@@ -20,14 +18,6 @@ app.add_middleware(
 def root():
     return {"message to users": "This is a fastAPI server"}
 
-
-@app.post("/process_data")
-async def process_data(data: dict) -> Awaitable[dict]:
-    ideal_move = await foo(data)
-    response = JSONResponse(content={"ideal_move": ideal_move})
-    response.headers["Access-Control-Allow-Origin"] = "*"
-    return response
-
 # @app.post("/process_data")
 # def process_data(data: dict):
 #     ideal_move = foo(data)
@@ -35,7 +25,14 @@ async def process_data(data: dict) -> Awaitable[dict]:
 #     response.headers["Access-Control-Allow-Origin"] = "*"
 #     return {"ideal_move":ideal_move}
 
-async def isWinner(board, player):
+@app.post("/process_data")
+async def process_data(data: dict):
+    ideal_move = await foo(data)
+    response = JSONResponse(content={"ideal_move": ideal_move})
+    response.headers["Access-Control-Allow-Origin"] = "*"
+    return response
+
+def isWinner(board, player):
     combinations = [[0, 1, 2], [3, 4, 5], [6, 7, 8], [
         0, 3, 6], [1, 4, 7], [2, 5, 8], [0, 4, 8], [2, 4, 6]]
     for c in combinations:
@@ -43,13 +40,13 @@ async def isWinner(board, player):
             return True
     return False
 
-async def minimax(board, player, players):
+def minimax(board, player, players):
     availableSpots = [x for x in board if type(x) == int]
     if len(availableSpots) == 9:
         return [random.randint(0, 8)]
-    if(await isWinner(board, players[0])):
+    if(isWinner(board, players[0])):
         return [-1,10]
-    elif(await isWinner(board, players[1])):
+    elif(isWinner(board, players[1])):
         return [-1, -10]
     elif(len(availableSpots) == 0):
         return [-1,0]
@@ -62,10 +59,10 @@ async def minimax(board, player, players):
         board[spot] = player
 
         if (player == players[0]):
-            result = await minimax(board, players[1], players)
+            result = minimax(board, players[1], players)
             move[1] = result[1]
         else:
-            result = await minimax(board, players[0], players)
+            result = minimax(board, players[0], players)
             move[1] = result[1]
         
         board[spot] = move[0] # backtrack
@@ -89,12 +86,12 @@ async def minimax(board, player, players):
     
     return moves[idealMove]
 
-async def play(board, human, ai):        
-    spot2 = await minimax(board, ai, [ai,human])
+def play(board, human, ai):        
+    spot2 = minimax(board, ai, [ai,human])
     return spot2[0]
 
-async def foo(obj):
+def foo(obj):
     board = [obj[x] if obj[x]!="" else int(x) for x in obj.keys()]
-    return await play(board, 'u', 'b')
+    return play(board, 'u', 'b')
 
     
